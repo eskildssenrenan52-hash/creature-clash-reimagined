@@ -22,6 +22,8 @@ import { generateWorld, W, H, TS, T, tileAt, biomeOf, solidAt, BIOME_LIST, hash,
 import { BIOME_LEVEL, enemyLevel, levelScale, xpModifier } from "./levels";
 import { buildTiles, drawChar, drawEnemy, drawStatue, drawNode } from "./gfx";
 import { getLook, resolveLook } from "./appearance";
+import { drawHero } from "./hero-sprite";
+import { petTick, petOnKill, drawPets, petsSave, petsLoad, petGuardMult, petDamageMult } from "./pet-play";
 import { foeTick } from "./foe-play";
 import { BUILDINGS, TREASURES, ROOM, doorOf, createInterior, prepareExploration, canClaimTreasure, type Building } from './exploration';
 import { drawBuildings, drawGroundDetails, drawInterior, drawTreasure } from './scenery';
@@ -391,7 +393,7 @@ export class Game {
     if (!e.alive) return;
     const s = this.stats();
     const crit = Math.random() < 0.05 + s.dex * 0.004;
-    let dmg = Math.max(1, Math.round((raw - e.def) * (0.9 + Math.random() * 0.2) * mult * damageDealtMult(this) * (crit ? 1.8 : 1)));
+    let dmg = Math.max(1, Math.round((raw - e.def) * (0.9 + Math.random() * 0.2) * mult * damageDealtMult(this) * petDamageMult(this) * (crit ? 1.8 : 1)));
     if (e.boss && !e.boss.active) this.activateBoss(e);
     e.hp -= dmg;
     e.hurt = 0.15;
@@ -410,6 +412,7 @@ export class Game {
     this.audio.sfx("die");
     if (e.summoned) return;
     epicOnKill(this);
+    petOnKill(this, e);
     islandOnKill(this, e);
     if (!e.boss && !this.island) sagaOnKill(this);
     const earned = Math.max(1, Math.round(e.xp * xpModifier(this.p.level, e.level) * luckMult(this)));
@@ -470,7 +473,7 @@ export class Game {
   hurtPlayer(raw: number, sx: number, sy: number) {
     const p = this.p;
     if (p.inv > 0 || p.dead > 0) return;
-    const dmg = Math.max(1, Math.round((raw - this.defense() * 0.6 + (Math.random() * 4 - 2)) * damageTakenMult(this)));
+    const dmg = Math.max(1, Math.round((raw - this.defense() * 0.6 + (Math.random() * 4 - 2)) * damageTakenMult(this) * petGuardMult(this)));
     p.hp -= dmg;
     p.inv = 0.6;
     const a = Math.atan2(p.y - sy, p.x - sx);
@@ -1010,6 +1013,7 @@ export class Game {
     p.frame = Math.floor(p.frameT) % 4;
     p.atkCd -= dt; p.spellCd -= dt; p.inv -= dt;
     if (p.attackT > 0) p.attackT -= dt * 4;
+    petTick(this, dt);
     if (!this.interior && (this.keys.has("Space") || this.keys.has("KeyJ"))) this.attack();
 
     if(this.doorCooldown<=0){
@@ -1342,8 +1346,11 @@ export class Game {
       const ring = p.equip.amulet ? ITEMS[p.equip.amulet].color : "#ddc58e";
       const w = this.weapon();
       const look = resolveLook(getLook(), armor.color, ring);
-      drawChar(c, p.x, p.y, look.pal, p.dir, p.frame, { kind: w.weapon ?? "sword", color: w.color }, Math.max(0, p.attackT), look.extras);
+      const L = getLook();
+      if (!drawHero(c, p.x, p.y, { skin: L.kskin, dir: p.dir, moving: Math.hypot(p.vx, p.vy) > 10, frameT: p.frameT, attack: Math.max(0, p.attackT), weapon: w, time: this.clock }))
+        drawChar(c, p.x, p.y, look.pal, p.dir, p.frame, { kind: w.weapon ?? "sword", color: w.color }, Math.max(0, p.attackT), look.extras);
     } });
+    drawPets(this, c, draws, wt);
     draws.sort((a, b) => a.y - b.y);
     for (const d of draws) d.f();
     // projectiles
@@ -1583,13 +1590,13 @@ export class Game {
         settlement: this.settlement, terrainEdits:this.terrainEdits, statues: [...this.statues], bosses: [...this.bossesDone], time: this.time, cycle: this.cycle, seenBeats: [...this.seenBeats],
       };
       localStorage.setItem("golden-arrow-save", JSON.stringify(data));
-      epicSave(this);
+      epicSave(this); petsSave(this);
     } catch { /* ignore */ }
   }
   static hasSave() { try { return !!localStorage.getItem("golden-arrow-save"); } catch { return false; } }
   load() {
     try {
-      epicLoad(this);
+      epicLoad(this); petsLoad(this);
       const raw = localStorage.getItem("golden-arrow-save"); if (!raw) return;
       const d = JSON.parse(raw);
       Object.assign(this.p, d.p);
