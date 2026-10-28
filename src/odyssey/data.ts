@@ -21,6 +21,8 @@ export interface ItemDef {
   heal?: number;
   mana?: number;
   price: number;
+  /** Folha de arma do primeiro jogo (player/weapon/<sprite>, ícone items/<sprite>). */
+  sprite?: string;
 }
 
 const I = (d: ItemDef) => d;
@@ -232,6 +234,45 @@ SHOP.splice(0, 0, "torch");
 
 // A Crônica do Cântico Partido: 17 Ecos, Vigias, chefes, missões e equipamento de fim de jogo (ver story.ts).
 for (const item of STORY_ITEMS) ITEMS[item.id] = item;
+
+// Arsenal do primeiro jogo: as armas antigas ganham sprites próprios e chegam novas lâminas, lanças, arcos e cajados.
+const LEGACY_SPRITES: Record<string, string> = {
+  wood_sword: "tinsword", mana_sword: "etherialblade", iron_spear: "ironspear", crystal_spear: "cobaltspear",
+  short_bow: "woodenbow", elven_bow: "bowwillowtwine", oak_staff: "naturestaff", elemental_staff: "sunshinestaff",
+};
+for (const [id, sprite] of Object.entries(LEGACY_SPRITES)) if (ITEMS[id]) ITEMS[id].sprite = sprite;
+export const ARSENAL: (ItemDef & { cost: Record<string, number>; gold: number })[] = [
+  { id: "k_coppersword", sprite: "coppersword", name: "Espada de Cobre", weapon: "sword", atk: 6, color: "#d08850", cost: { copper_ore: 4, wood: 1 }, gold: 15 },
+  { id: "k_ironsword", sprite: "ironsword", name: "Espada de Ferro", weapon: "sword", atk: 10, color: "#c0c8d0", cost: { iron_ingot: 3, wood: 1 }, gold: 40 },
+  { id: "k_goldsword", sprite: "goldsword", name: "Espada Dourada", weapon: "sword", atk: 14, bonus: { wis: 1 }, color: "#f0c040", cost: { iron_ingot: 3, mana_shard: 2 }, gold: 120 },
+  { id: "k_firesword", sprite: "firesword", name: "Lâmina Flamejante", weapon: "sword", atk: 22, bonus: { str: 2 }, color: "#ff6030", cost: { iron_ingot: 5, coal: 6, mana_shard: 3 }, gold: 260 },
+  { id: "k_icesword", sprite: "icesword", name: "Lâmina de Gelo", weapon: "sword", atk: 22, bonus: { int: 2 }, color: "#90e0ff", cost: { iron_ingot: 5, frost_herb: 4, mana_shard: 3 }, gold: 260 },
+  { id: "k_bluelightsaber", sprite: "bluelightsaber", name: "Sabre de Luz Azul", weapon: "sword", atk: 26, bonus: { dex: 3 }, color: "#60a0ff", cost: { crystal_ore: 5, mana_shard: 6 }, gold: 380 },
+  { id: "k_nightsword", sprite: "nightsword", name: "Espada da Noite", weapon: "sword", atk: 30, bonus: { str: 3, dex: 1 }, color: "#5040a0", cost: { crystal_ore: 6, iron_ingot: 6, chitin: 3 }, gold: 480 },
+  { id: "k_angelicblade", sprite: "angelicblade", name: "Lâmina Angelical", weapon: "sword", atk: 36, bonus: { wis: 4, hp: 30 }, color: "#fff4c0", cost: { crystal_ore: 8, mana_shard: 10, desert_rose: 4 }, gold: 700 },
+  { id: "k_bladeofdarkness", sprite: "bladeofdarkness", name: "Lâmina das Trevas", weapon: "sword", atk: 42, bonus: { str: 5 }, color: "#40206a", cost: { crystal_ore: 10, iron_ingot: 10, chitin: 6 }, gold: 900 },
+  { id: "k_bronzespear", sprite: "bronzespear", name: "Lança de Bronze", weapon: "spear", atk: 7, color: "#c89058", cost: { copper_ore: 4, wood: 3 }, gold: 20 },
+  { id: "k_goldspear", sprite: "goldspear", name: "Lança Dourada", weapon: "spear", atk: 16, bonus: { str: 1 }, color: "#f0c040", cost: { iron_ingot: 4, mana_shard: 2, wood: 3 }, gold: 160 },
+  { id: "k_timelessglaive", sprite: "timelessglaive", name: "Glaive Atemporal", weapon: "spear", atk: 32, bonus: { dex: 2, str: 2 }, color: "#a0f0d0", cost: { crystal_ore: 8, mana_shard: 8, wood: 4 }, gold: 650 },
+  { id: "k_bowpine", sprite: "bowpine", name: "Arco de Pinho", weapon: "bow", atk: 8, color: "#7a5a30", cost: { wood: 6 }, gold: 20 },
+  { id: "k_bowocean", sprite: "bowocean", name: "Arco do Oceano", weapon: "bow", atk: 18, bonus: { dex: 2 }, color: "#3080d0", cost: { wood: 8, mana_shard: 3, goo: 3 }, gold: 220 },
+  { id: "k_bowsun", sprite: "bowsun", name: "Arco do Sol", weapon: "bow", atk: 28, bonus: { dex: 4 }, color: "#ffd040", cost: { wood: 10, crystal_ore: 5, desert_rose: 3 }, gold: 520 },
+  { id: "k_firestaff", sprite: "firestaff", name: "Cajado de Fogo", weapon: "staff", atk: 12, bonus: { int: 2 }, color: "#ff7040", cost: { wood: 4, coal: 4, mana_shard: 2 }, gold: 90 },
+  { id: "k_lightningstaff", sprite: "lightningstaff", name: "Cajado do Trovão", weapon: "staff", atk: 21, bonus: { int: 3, mp: 15 }, color: "#f0f060", cost: { wood: 5, crystal_ore: 3, mana_shard: 4 }, gold: 300 },
+  { id: "k_bloodmoonstaff", sprite: "bloodmoonstaff", name: "Cajado da Lua de Sangue", weapon: "staff", atk: 33, bonus: { int: 5, mp: 30 }, color: "#c02040", cost: { crystal_ore: 8, mana_shard: 10, moonflower: 3 }, gold: 720 },
+].map((w) => ({ ...w, type: "weapon" as const, desc: `Arma forjada à moda antiga · ATQ ${w.atk}.`, price: Math.round(w.gold * 1.4 + w.atk * 6) }));
+for (const w of ARSENAL) {
+  const { cost, gold, ...item } = w; ITEMS[w.id] = item;
+  RECIPES.push({ out: w.id, qty: 1, station: "smith", cost, gold });
+}
+// Petiscos para o sistema de pets (ver pets.ts): vendidos no mercado e feitos na alquimia.
+ITEMS["pet_treat"] = { id: "pet_treat", name: "Petisco de Mana", type: "material", desc: "Comida favorita dos pets: +fome, +laço.", color: "#f0a0c0", price: 12 };
+ITEMS["pet_feast"] = { id: "pet_feast", name: "Banquete Real", type: "material", desc: "Enche a fome, muito laço e um pouco de XP.", color: "#ffd070", price: 60 };
+ITEMS["evo_stone"] = { id: "evo_stone", name: "Pedra da Evolução", type: "material", desc: "Necessária para algumas evoluções de pets.", color: "#a070ff", price: 250 };
+SHOP.push("pet_treat");
+RECIPES.push({ out: "pet_treat", qty: 3, station: "alchemist", cost: { carrot: 1, wheat: 1 }, gold: 0 });
+RECIPES.push({ out: "pet_feast", qty: 1, station: "alchemist", cost: { pet_treat: 3, moonflower: 1 }, gold: 10 });
+RECIPES.push({ out: "evo_stone", qty: 1, station: "alchemist", cost: { mana_shard: 5, crystal_ore: 2 }, gold: 80 });
 RECIPES.push(...STORY_RECIPES);
 BOSSES.push(...STORY_BOSSES);
 NPCS.push(...STORY_NPCS);
