@@ -11,7 +11,7 @@ export type PetStats = Record<StatKey, number>;
 export interface EvoRule { to: string; level: number; bond?: number; time?: "dia" | "noite"; biome?: string[]; item?: string; label: string }
 export interface Species {
   id: string; name: string; sheet: string; element: Element; rarity: Rarity; role: Role;
-  base: PetStats; evolves?: EvoRule[]; stage: 1 | 2 | 3; desc: string; scale?: number; favorite: string;
+  base: PetStats; evolves?: EvoRule[] | undefined; stage: 1 | 2 | 3; desc: string; scale?: number | undefined; favorite: string;
 }
 
 export const ELEMENTS: Record<Element, { name: string; color: string; strong: Element[] }> = {

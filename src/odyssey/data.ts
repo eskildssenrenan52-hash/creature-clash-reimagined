@@ -261,7 +261,7 @@ export const ARSENAL = ([
   { id: "k_firestaff", sprite: "firestaff", name: "Cajado de Fogo", weapon: "staff", atk: 12, bonus: { int: 2 }, color: "#ff7040", cost: { wood: 4, coal: 4, mana_shard: 2 }, gold: 90 },
   { id: "k_lightningstaff", sprite: "lightningstaff", name: "Cajado do Trovão", weapon: "staff", atk: 21, bonus: { int: 3, mp: 15 }, color: "#f0f060", cost: { wood: 5, crystal_ore: 3, mana_shard: 4 }, gold: 300 },
   { id: "k_bloodmoonstaff", sprite: "bloodmoonstaff", name: "Cajado da Lua de Sangue", weapon: "staff", atk: 33, bonus: { int: 5, mp: 30 }, color: "#c02040", cost: { crystal_ore: 8, mana_shard: 10, moonflower: 3 }, gold: 720 },
-] as ArsenalDef[]).map((w) => ({ ...w, type: "weapon" as const, desc: `Arma forjada à moda antiga · ATQ ${w.atk}.`, price: Math.round(w.gold * 1.4 + w.atk * 6) }));
+] as ArsenalDef[]).map((w) => ({ ...w, type: "weapon" as const, desc: `Arma forjada à moda antiga · ATQ ${w.atk ?? 0}.`, price: Math.round(w.gold * 1.4 + (w.atk ?? 0) * 6) }));
 for (const w of ARSENAL) {
   const { cost, gold, ...item } = w; ITEMS[w.id] = item;
   RECIPES.push({ out: w.id, qty: 1, station: "smith", cost, gold });
