@@ -102,7 +102,7 @@ function drawTile(c: Ctx, t: number, v: number) {
 }
 
 /** Extras opcionais do herói (cabelo, olhos, capa, chapéu, marcas). Sem eles o desenho é idêntico ao original. */
-export interface CharExtras { hairStyle?: number; eyes?: string; cape?: string; hat?: number; hatColor?: string; mark?: number }
+export interface CharExtras { hairStyle?: number; eyes?: string; cape?: string | undefined; hat?: number; hatColor?: string; mark?: number }
 
 export function drawChar(c: Ctx, x: number, y: number, pal: Palette, dir: number, frame: number, weapon?: { kind: WeaponKind; color: string } | null, attack = 0, ex?: CharExtras) {
   // x,y = feet center. 12x18 sprite.
