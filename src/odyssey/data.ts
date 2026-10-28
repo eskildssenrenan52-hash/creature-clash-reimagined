@@ -241,7 +241,8 @@ const LEGACY_SPRITES: Record<string, string> = {
   short_bow: "woodenbow", elven_bow: "bowwillowtwine", oak_staff: "naturestaff", elemental_staff: "sunshinestaff",
 };
 for (const [id, sprite] of Object.entries(LEGACY_SPRITES)) if (ITEMS[id]) ITEMS[id].sprite = sprite;
-export const ARSENAL: (ItemDef & { cost: Record<string, number>; gold: number })[] = [
+type ArsenalDef = Omit<ItemDef, "type" | "desc" | "price"> & { cost: Record<string, number>; gold: number };
+export const ARSENAL = ([
   { id: "k_coppersword", sprite: "coppersword", name: "Espada de Cobre", weapon: "sword", atk: 6, color: "#d08850", cost: { copper_ore: 4, wood: 1 }, gold: 15 },
   { id: "k_ironsword", sprite: "ironsword", name: "Espada de Ferro", weapon: "sword", atk: 10, color: "#c0c8d0", cost: { iron_ingot: 3, wood: 1 }, gold: 40 },
   { id: "k_goldsword", sprite: "goldsword", name: "Espada Dourada", weapon: "sword", atk: 14, bonus: { wis: 1 }, color: "#f0c040", cost: { iron_ingot: 3, mana_shard: 2 }, gold: 120 },
@@ -260,7 +261,7 @@ export const ARSENAL: (ItemDef & { cost: Record<string, number>; gold: number })
   { id: "k_firestaff", sprite: "firestaff", name: "Cajado de Fogo", weapon: "staff", atk: 12, bonus: { int: 2 }, color: "#ff7040", cost: { wood: 4, coal: 4, mana_shard: 2 }, gold: 90 },
   { id: "k_lightningstaff", sprite: "lightningstaff", name: "Cajado do Trovão", weapon: "staff", atk: 21, bonus: { int: 3, mp: 15 }, color: "#f0f060", cost: { wood: 5, crystal_ore: 3, mana_shard: 4 }, gold: 300 },
   { id: "k_bloodmoonstaff", sprite: "bloodmoonstaff", name: "Cajado da Lua de Sangue", weapon: "staff", atk: 33, bonus: { int: 5, mp: 30 }, color: "#c02040", cost: { crystal_ore: 8, mana_shard: 10, moonflower: 3 }, gold: 720 },
-].map((w) => ({ ...w, type: "weapon" as const, desc: `Arma forjada à moda antiga · ATQ ${w.atk}.`, price: Math.round(w.gold * 1.4 + w.atk * 6) }));
+] as ArsenalDef[]).map((w) => ({ ...w, type: "weapon" as const, desc: `Arma forjada à moda antiga · ATQ ${w.atk}.`, price: Math.round(w.gold * 1.4 + w.atk * 6) }));
 for (const w of ARSENAL) {
   const { cost, gold, ...item } = w; ITEMS[w.id] = item;
   RECIPES.push({ out: w.id, qty: 1, station: "smith", cost, gold });

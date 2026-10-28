@@ -4,7 +4,7 @@
 import SHEETS from "./kaetram-sprites.json";
 
 export interface KSheet { url: string; w?: number; h?: number; ox?: number; oy?: number; anims?: Record<string, [number, number]>; idle?: number }
-export const K_SHEETS = SHEETS as Record<string, KSheet>;
+export const K_SHEETS = SHEETS as unknown as Record<string, KSheet>;
 
 const cache = new Map<string, HTMLImageElement | null>();
 export function kImage(key: string): HTMLImageElement | null {
@@ -29,7 +29,7 @@ export const K_DIR = ["down", "right", "right", "up"] as const;
 export function drawK(c: CanvasRenderingContext2D, key: string, anim: string, frame: number, x: number, y: number, flip = false, alpha = 1, scale = 1): boolean {
   const def = K_SHEETS[key]; const img = kImage(key);
   if (!def || !img || !def.anims) return false;
-  const a = def.anims[anim] ?? def.anims[anim.replace("bow_", "")] ?? def.anims[anim.replace(/^(atk|walk)_/, "idle_")] ?? def.anims.idle_down ?? Object.values(def.anims)[0];
+  const a = def.anims[anim] ?? def.anims[anim.replace("bow_", "")] ?? def.anims[anim.replace(/^(atk|walk)_/, "idle_")] ?? def.anims["idle_down"] ?? Object.values(def.anims)[0];
   if (!a) return false;
   const w = def.w ?? 32, h = def.h ?? 32, ox = def.ox ?? -16, oy = def.oy ?? -16;
   const f = ((Math.floor(frame) % a[0]) + a[0]) % a[0];
