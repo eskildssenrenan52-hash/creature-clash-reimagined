@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TROQUE pela URL publicada do seu jogo (Lovable → Publish). Precisa ser https. -->
+    <string name="game_url" translatable="false">https://SEU-PROJETO.lovable.app/odyssey</string>
+</resources>
