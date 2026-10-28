@@ -144,7 +144,7 @@ export const LEGION_ART: Record<string, LegionArt> = {};
 for (const line of RAW) {
   const [name, lore, plan, el, cols, feats, rawTrait, lv, biomes] = line.split('|');
   const p = PLAN[plan as LegionPlan], level = Number(lv), ranged = rawTrait.endsWith('+') || ['spread', 'spiral', 'strafe'].includes(rawTrait);
-  const trait = rawTrait.replace('+', '') as FoeTrait, id = slug(name), e = EL[el] ?? EL.fire;
+  const trait = rawTrait.replace('+', '') as FoeTrait, id = slug(name), e = EL[el] ?? EL["fire"];
   const shot = !ranged ? undefined : trait === 'spiral' ? { color: e.shot, speed: 95, n: 6, spread: Math.PI / 3 }
     : trait === 'spread' ? { color: e.shot, speed: 105, n: 3, spread: 0.3, ...(el === 'ice' ? { slow: true } : {}) }
     : { color: e.shot, speed: 120, n: 1, spread: 0, ...(el === 'ice' ? { slow: true } : {}) };
