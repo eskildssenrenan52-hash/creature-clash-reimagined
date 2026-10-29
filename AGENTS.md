@@ -19,7 +19,7 @@
 - Keep legacy generation and treasure coordinates in the original region; generate frontier terrain in lightweight sectors from a separate browser-safe catalog so larger worlds retain save compatibility and fast startup.
 - Size the Canvas camera from its screen bounds and keep controls as accessible overlays; this fills different screen proportions without stretching pixel-art geometry.
 - Generate frontier enemies near exploration rather than allocating a world-wide population; this preserves original quest enemies and bounds combat workload.
-- Two games coexist: Golden Arrow Odyssey lives in `src/odyssey/` (route /odyssey, own save key) and Mana Echoes in `src/game/` (route /mana); `/` is the shared intro/title with accounts. Keeps both games' saves and engines independent.
+- Odyssey lives in src/odyssey at /odyssey; / is its title and accounts. Mana Echoes is no longer included.
 - Accounts only store a player profile (username); game progress stays in browser storage, as the user chose.
 - Secret chains and hidden realms are pure deterministic data in src/odyssey/secrets.ts; runtime hooks live in src/odyssey/secret-play.ts and persist only through existing discoveries/openedChests save sets, keeping old saves compatible.
 - Hidden realms reuse the temple depth state with `realm_`-prefixed pseudo-temples so the engine needs no new depth kind.
@@ -38,4 +38,5 @@
 - Internal canvas resolution keeps the short side at 270 px with a capped long side, so portrait phones draw ~3× fewer pixels; the minimap is half resolution on mobile and the atlas image is a ≤960 px downscale to avoid memory crashes.
 - The game loop wraps update/render in try/catch so a single bad frame never stops the game.
 - New world creatures live in src/odyssey/foes.ts (pure data, no value imports, merged into ENEMIES/BIOME_ENEMIES/MONSTER_LEVEL), drawn by foe-art.ts via drawEnemy's default branch and driven by traits in foe-play.ts; original enemy pools stay untouched.
-- The downloadable Android prototype is an online, HTTPS-origin-restricted WebView wrapper opening guest gameplay directly; keep browser saves inside its app storage and do not promise native OAuth, offline play, or Play Store release signing.
+- Android bundles the browser-only Odyssey screen and assets at an intercepted HTTPS local origin using platform Activity/WebView; guest saves stay in app storage, accounts are excluded, and prototype signing is not Play Store signing.
+- PetsPanel uses pets.ts rules and pet-play.ts state, committing through existing saves to preserve legacy world progress.
