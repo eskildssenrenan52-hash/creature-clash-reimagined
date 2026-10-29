@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { drawChar } from "@/odyssey/gfx";
+import { drawHero, HERO_SKINS, CLASSIC_SKIN, skinUnlocked } from "@/odyssey/hero-sprite";
 import {
   CAPES, DEFAULT_LOOK, EYE_COLORS, HAIR_COLORS, HAIR_STYLES, HATS, MARKS, OUTFITS, SKIN_PRESETS, SKIN_TONES,
   getLook, randomLook, resolveLook, setLook, type Look,
@@ -20,7 +21,8 @@ function Preview({ look, armor, ring }: { look: Look; armor: string; ring: strin
     const r = resolveLook(look, armor, ring);
     c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 84, 156); c.imageSmoothingEnabled = false;
     c.setTransform(6, 0, 0, 6, 0, 0);
-    drawChar(c, 7, 22, r.pal, dir, frame, null, 0, r.extras);
+    if (!drawHero(c, 7, 22, { skin: look.kskin, dir, moving: walk, frameT: frame, attack: 0, time: frame }))
+      drawChar(c, 7, 22, r.pal, dir, frame, null, 0, r.extras);
   }, [look, armor, ring, dir, frame]);
   return (
     <div className="look-preview">
@@ -37,7 +39,7 @@ function Preview({ look, armor, ring }: { look: Look; armor: string; ring: strin
 export function AppearancePanel({ level, armor, ring }: { level: number; armor: string; ring: string }) {
   const [look, setL] = useState<Look>(() => getLook());
   const [cat, setCat] = useState<Cat>("skins");
-  const apply = (patch: Partial<Look>) => { const n = { ...look, ...patch }; setL(n); setLook(n); };
+  const apply = (patch: Partial<Look>) => { const n = { ...look, kskin: CLASSIC_SKIN, ...patch }; setL(n); setLook(n); };
   const set = (n: Look) => { setL(n); setLook(n); };
 
   const swatches = (items: { name: string; color: string }[], key: keyof Look) => (
@@ -60,10 +62,10 @@ export function AppearancePanel({ level, armor, ring }: { level: number; armor: 
       <div className="look-editor">
         <div className="look-cats" role="tablist" aria-label="Categorias">{CATS.map(([id, label]) => <button key={id} role="tab" aria-selected={cat === id} className={cat === id ? "on" : ""} onClick={() => setCat(id)}>{label}</button>)}</div>
         <div className="look-options">
-          {cat === "skins" && <div className="look-skins">{SKIN_PRESETS.map((s) => {
+          {cat === "skins" && <><div className="look-skins">{HERO_SKINS.map((s, i) => <Button key={s.id} variant="game" disabled={!skinUnlocked(i, level)} aria-pressed={look.kskin === i} className={`look-skin h-auto whitespace-normal text-left ${look.kskin === i ? "ring-1 ring-primary" : ""}`} onClick={() => apply({ kskin: i })}><b>{s.name}</b><small>{skinUnlocked(i, level) ? s.desc : `Libera no nível ${s.minLevel}`}</small></Button>)}</div><div className="look-skins mt-3">{SKIN_PRESETS.map((s) => {
             const lock = level < s.minLevel;
-            return <button key={s.id} disabled={lock} className="look-skin" onClick={() => set({ ...s.look })}><b>{s.name}</b><small>{lock ? `Libera no nível ${s.minLevel}` : s.desc}</small></button>;
-          })}</div>}
+            return <Button variant="game" key={s.id} disabled={lock} className="look-skin h-auto whitespace-normal text-left" onClick={() => set({ ...s.look, kskin: CLASSIC_SKIN })}><b>{s.name}</b><small>{lock ? `Libera no nível ${s.minLevel}` : s.desc}</small></Button>;
+          })}</div></>}
           {cat === "skin" && swatches(SKIN_TONES, "skin")}
           {cat === "hair" && swatches(HAIR_COLORS, "hairColor")}
           {cat === "style" && chips(HAIR_STYLES, "hairStyle")}

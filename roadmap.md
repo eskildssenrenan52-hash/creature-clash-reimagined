@@ -1,4 +1,11 @@
 # Mana Echoes expansion
+# Continuação: sprites e APK (29/out/2026)
+- [ ] Concluir gerenciamento de pets, seleção de skins e ícones das armas importadas.
+- [ ] Corrigir referências antigas das imagens do mapa.
+- [ ] Verificar pets, aparência e persistência jogando.
+- [ ] Gerar e entregar APK assinado instalável desta versão do jogo.
+- [ ] Validar em Android real (bloqueado: nenhum aparelho disponível).
+
 - [x] Preserve original RPG, quests, combat, interiors, audio and saves.
 - [x] Add distinct explorable biomes inspired by Source of Mana.
 - [x] Add mining, farming, home construction, carpentry and expanded forge.

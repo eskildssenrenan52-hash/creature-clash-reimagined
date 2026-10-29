@@ -26,6 +26,10 @@ import { CinemaStage, stageFor } from "@/components/CinemaStage";
 import { Joystick } from "@/components/Joystick";
 import { AppearancePanel } from "@/components/AppearancePanel";
 import { epicTick, epicNewGame } from "@/odyssey/epic-play";
+import { petsNewGame } from "@/odyssey/pet-play";
+import { PetsPanel } from "@/components/PetsPanel";
+import { drawKIcon, kImage } from "@/odyssey/kaetram";
+import { PawPrint } from "lucide-react";
 
 export const Route = createFileRoute("/odyssey")({
   head: () => ({
@@ -39,17 +43,24 @@ export const Route = createFileRoute("/odyssey")({
     ],
   }),
   ssr: false,
-  component: Index,
+  component: OdysseyScreen,
 });
 
-type Panel = null | "inv" | "char" | "quest" | "map" | "secrets" | "workshop" | "build" | "farm" | "home" | "chronicle" | "bestiary" | "grimoire" | "epic";
+type Panel = null | "inv" | "char" | "quest" | "map" | "secrets" | "workshop" | "build" | "farm" | "home" | "chronicle" | "bestiary" | "grimoire" | "epic" | "pets";
 
 function Icon({ id, size = 32 }: { id: string; size?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current?.getContext("2d"); if (!c) return;
-    c.clearRect(0, 0, 32, 32); c.imageSmoothingEnabled = false;
-    const it = ITEMS[id]; if (it) drawItemIcon(c, id, it.color, it.type, 0, 0, 2);
+    const it = ITEMS[id]; if (!it) return;
+    const paint = () => {
+      c.clearRect(0, 0, 32, 32); c.imageSmoothingEnabled = false;
+      if (!it.sprite || !drawKIcon(c, it.sprite, 0, 0, 32)) drawItemIcon(c, id, it.color, it.type, 0, 0, 2);
+    };
+    paint();
+    const img = it.sprite ? kImage(`items/${it.sprite}`) : null;
+    img?.addEventListener("load", paint);
+    return () => img?.removeEventListener("load", paint);
   }, [id]);
   return <canvas ref={ref} width={32} height={32} style={{ width: size, height: size, imageRendering: "pixelated" }} />;
 }
@@ -71,7 +82,7 @@ function Bar({ v, max, cls, label }: { v: number; max: number; cls: string; labe
   );
 }
 
-function Index() {
+export function OdysseyScreen() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<Game | null>(null);
   const [, setTick] = useState(0);
@@ -149,6 +160,7 @@ function Index() {
       if (e.code === "KeyB") return toggle("bestiary");
       if (e.code === "KeyV") return toggle("grimoire");
       if (e.code === "KeyO") return toggle("epic");
+      if (e.code === "KeyP") return toggle("pets");
       if (g.dialog || g.openStation || panelRef.current) return;
       if (e.code.startsWith("Digit")) { const i = Number(e.code.slice(5)) - 1; const id = loadout(g)[i]; if (id) g.cast(id); }
       if (e.code === "KeyE" || e.code === "Enter") g.interact();
@@ -171,7 +183,7 @@ function Index() {
     if (!g) return;
     if (load) g.load();
     g.started = true; g.audio.init(); setTitle(false);
-    if (!load) { g.toast("Fale com Gorm na vila ou comece seu lar na clareira a leste.", "#ffd040"); g.fireBeats("new"); epicNewGame(g); }
+    if (!load) { petsNewGame(g); g.toast("Fale com Gorm na vila ou comece seu lar na clareira a leste.", "#ffd040"); g.fireBeats("new"); epicNewGame(g); }
   };
   const onMouse = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!g || !g.started) return;
@@ -323,6 +335,7 @@ function Index() {
             {panel === "bestiary" && <Modal title="Bestiário do Abismo do Cântico" onClose={() => setPanel(null)}><BestiaryPanel found={g.discoveries} /></Modal>}
             {panel === "grimoire" && <GrimoirePanel g={g} onClose={() => setPanel(null)} />}
             {panel === "epic" && <EpicPanel g={g} onClose={() => setPanel(null)} />}
+            {panel === "pets" && <PetsPanel g={g} onClose={() => setPanel(null)} />}
             {panel === "quest" && <QuestBook g={g} onClose={() => setPanel(null)} />}
             {panel === "map" && (
               <Modal title="Atlas de Mana — 30 biomas" onClose={() => setPanel(null)}>
@@ -387,7 +400,7 @@ function Index() {
                   {p:'inv',label:'Mochila',icon:'inv'},{p:'char',label:'Herói',icon:'char'},{p:'quest',label:'Missões',icon:'quest'},{p:'map',label:'Mapa',icon:'map'},
                   {p:'chronicle',label:'Crônica',icon:'chronicle'},{p:'epic',label:'Grande Crônica',icon:'chronicle'},{p:'bestiary',label:'Bestiário',icon:'bestiary'},{p:'grimoire',label:'Grimório',icon:'secrets'},{p:'secrets',label:'Descobertas',icon:'secrets'},
                 ] as const).map(it=><button key={it.p} onClick={()=>{setMenuOpen(false);setPanel(it.p);}}><GameIcon name={it.icon as never} size={30}/><span>{it.label}</span></button>)}
-                <button onClick={()=>{setMenuOpen(false);setHeroTab('look');setPanel('char');}}><span className="menu-emoji" aria-hidden>🎭</span><span>Aparência</span></button></div>
+                <Button variant="game" onClick={()=>{setMenuOpen(false);setPanel('pets');}}><PawPrint size={28}/><span>Pets</span></Button><button onClick={()=>{setMenuOpen(false);setHeroTab('look');setPanel('char');}}><span className="menu-emoji" aria-hidden>🎭</span><span>Aparência</span></button></div>
                 <div className="menu-group">Ferramenta · {g.tool==='explore'?'Explorar':g.tool}</div>
                 <div className="menu-grid menu-grid-5">{([{id:'explore',label:'Explorar',icon:'explore'},{id:'mine',label:'Minerar',icon:'mine'},{id:'axe',label:'Lenhar',icon:'axe'},{id:'till',label:'Terra',icon:'till'},{id:'water',label:'Regar',icon:'water'}] as const).map(t=><button key={t.id} className={g.tool===t.id?'on':''} onClick={()=>{g.tool=t.id;setMenuOpen(false);}}><GameIcon name={t.icon as never} size={28}/><span>{t.label}</span></button>)}</div>
                 <div className="menu-group">Lar e oficinas</div>
@@ -408,6 +421,7 @@ function Index() {
         </>
       )}
       <footer className="game-toolbar">
+        <Button variant="ghost" size="icon" disabled={title} aria-label="Pets" title="Pets (P)" onClick={()=>setPanel(panel==='pets'?null:'pets')}><PawPrint size={20}/></Button>
         <div className="toolbar-actions">{([{p:'inv',icon:Backpack,label:'Inventário'},{p:'char',icon:UserRound,label:'Herói'},{p:'quest',icon:ScrollText,label:'Missões'},{p:'chronicle',icon:BookOpen,label:'Crônica (J)'},{p:'map',icon:Map,label:'Mapa'},{p:'secrets',icon:Compass,label:'Descobertas'},{p:'bestiary',icon:Skull,label:'Bestiário (B)'},{p:'grimoire',icon:Sparkles,label:'Grimório (V)'},{p:'epic',icon:ScrollText,label:'Grande Crônica (O)'}] as const).map(({p:tab,icon:ToolIcon,label})=><Button key={tab} variant="ghost" size="icon" disabled={title} title={label} aria-label={label} onClick={()=>setPanel(panel===tab?null:tab)} className={panel===tab?'text-primary':'text-muted-foreground'}><GameIcon name={tab}/><ToolIcon size={18}/></Button>)}<span className="toolbar-divider"/>{([{id:'explore',icon:Swords,label:'Explorar'},{id:'mine',icon:Pickaxe,label:'Minerar'},{id:'axe',icon:Axe,label:'Cortar madeira'},{id:'till',icon:Shovel,label:'Preparar terra'},{id:'water',icon:Droplets,label:'Regar'}] as const).map(({id,icon:ToolIcon,label})=><Button key={id} variant="ghost" size="icon" aria-label={label} title={label} disabled={title} onClick={()=>{if(g)g.tool=id;}} className={g?.tool===id&&!title?'tool-active':'text-muted-foreground'}><GameIcon name={id}/><ToolIcon size={18}/></Button>)}</div>
         {g && !title && panel === 'home' && <Modal title={`Minha casa · ${HOME_LEVELS[g.settlement.home.level - 1].name}`} onClose={()=>setPanel(null)}>
           {g.settlement.home.level < HOME_LEVELS.length ? <Button variant="secondary" className="mb-4" onClick={()=>{upgradeHome(g);setPanel(null);}}><Hammer/>Reformar para {HOME_LEVELS[g.settlement.home.level].name}<small className="ml-2 opacity-80">{Object.entries(HOME_LEVELS[g.settlement.home.level].cost).map(([key,n])=>`${ITEMS[key].name} ${g.count(key)}/${n}`).join(' · ')}</small></Button> : <div className="progress-line mb-4">Sua mansão está completa.</div>}
